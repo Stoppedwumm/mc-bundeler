@@ -34,12 +34,19 @@ jobs:
           # You can change the Python version if needed.
           python-version: '3.9'
 
-      # Step 3: Run the main Python script to build the project.
+      # Step 3: Install dependencies from requirements.txt.
+      # This step ensures that all required libraries are available before running the script.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: Run the main Python script to build the project.
       # This executes the __main__.py file which bundles the application.
       - name: Run the bundler script
         run: python __main__.py
 
-      # Step 4: Upload the generated 'dist' directory as a build artifact.
+      # Step 5: Upload the generated 'dist' directory as a build artifact.
       # The artifact will be named based on the runner's operating system (e.g., dist-Windows, dist-macOS).
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
