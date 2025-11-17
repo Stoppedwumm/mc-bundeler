@@ -1,0 +1,50 @@
+# Name of the GitHub Actions workflow.
+name: Build and Package
+
+# Controls when the workflow will run.
+# This workflow runs on any push or pull request to the 'main' branch.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
+jobs:
+  # This job is named 'build'.
+  build:
+    # This specifies that the job will run on different operating systems using a matrix strategy.
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest] # Defines the OSes to run on.
+
+    # The type of runner that the job will run on, taken from the matrix.
+    runs-on: ${{ matrix.os }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job.
+    steps:
+      # Step 1: Check out your repository under $GITHUB_WORKSPACE, so your job can access it.
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the specified version of Python on the runner.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # You can change the Python version if needed.
+          python-version: '3.9'
+
+      # Step 3: Run the main Python script to build the project.
+      # This executes the __main__.py file which bundles the application.
+      - name: Run the bundler script
+        run: python __main__.py
+
+      # Step 4: Upload the generated 'dist' directory as a build artifact.
+      # The artifact will be named based on the runner's operating system (e.g., dist-Windows, dist-macOS).
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          # The name of the artifact to be uploaded.
+          name: dist-${{ runner.os }}
+          # The path to the directory to upload.
+          path: dist/
