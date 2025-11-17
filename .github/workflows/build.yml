@@ -1,13 +1,11 @@
 # Name of the GitHub Actions workflow.
-name: Build and Package
+name: Build and Update Release
 
 # Controls when the workflow will run.
-# This workflow runs on any push or pull request to the 'main' branch.
+# This workflow runs when a release is published.
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  release:
+    types: [published]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
@@ -55,3 +53,62 @@ jobs:
           name: dist-${{ runner.os }}
           # The path to the directory to upload.
           path: dist/
+
+  # This job uploads the build artifacts to the existing release.
+  update-release:
+    # This job runs on the latest version of Ubuntu.
+    runs-on: ubuntu-latest
+    # This job depends on the successful completion of the 'build' job.
+    needs: build
+
+    # Steps to be executed in the 'update-release' job.
+    steps:
+      # Step 1: Download the Windows build artifact.
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-windows-latest
+          path: dist-windows
+
+      # Step 2: Download the macOS build artifact.
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-macos-latest
+          path: dist-macos
+
+      # Step 3: Upload the Windows artifact to the release.
+      # This will overwrite the file if it already exists.
+      - name: Upload Windows Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # The URL for uploading assets, taken from the release that triggered the workflow.
+          upload_url: ${{ github.event.release.upload_url }}
+          # The path to the asset to upload.
+          # IMPORTANT: Change 'your-application-name.exe' to the actual name of your executable.
+          asset_path: ./dist-windows/your-application-name.exe
+          # The name of the asset in the release.
+          # IMPORTANT: Change this to your desired asset name.
+          asset_name: your-application-name-windows.exe
+          # The content type of the asset.
+          asset_content_type: application/octet-stream
+
+      # Step 4: Upload the macOS artifact to the release.
+      # This will also overwrite the file if it already exists.
+      - name: Upload macOS Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # The URL for uploading assets, taken from the release that triggered the workflow.
+          upload_url: ${{ github.event.release.upload_url }}
+          # The path to the asset to upload.
+          # IMPORTANT: Change 'your-application-name' to the actual name of your application.
+          asset_path: ./dist-macos/your-application-name
+          # The name of the asset in the release.
+          # IMPORTANT: Change this to your desired asset name.
+          asset_name: your-application-name-macos
+          # The content type of the asset.
+          asset_content_type: application/octet-stream```
